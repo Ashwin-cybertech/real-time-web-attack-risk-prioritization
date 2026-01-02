@@ -38,6 +38,8 @@ This project is structured as a **10-role SOC workflow**:
 ---
 
 ## 🏗️ Architecture Flow
+![n8n Workflow](screenshots/n8n-workflow.png)
+
 
 Web Attack
 ↓
