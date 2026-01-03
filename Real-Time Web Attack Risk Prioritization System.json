@@ -1,0 +1,265 @@
+{
+  "name": "Real-Time Web Attack Risk Prioritization System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "3d032470-d0c9-4d18-8f8f-d63883c8ca7c",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "16a20c47-0415-4088-a332-2b79a12b2e99",
+      "name": "Webhook",
+      "webhookId": "3d032470-d0c9-4d18-8f8f-d63883c8ca7c"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "security_alerts",
+          "mode": "list",
+          "cachedResultName": "security_alerts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "approved": false,
+            "risk_score": 90,
+            "source": "{{$json.source}}",
+            "attack_type": "{{$json.attack_type}}",
+            "payload": "{{$json.payload}}",
+            "endpoint": "{{$json.endpoint}}",
+            "owasp_category": "A03: Injection",
+            "ai_explanation": "Detected SQL Injection attempt",
+            "risk_level": "HIGH",
+            "decision": "ESCALATE"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attack_type",
+              "displayName": "attack_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "endpoint",
+              "displayName": "endpoint",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owasp_category",
+              "displayName": "owasp_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_explanation",
+              "displayName": "ai_explanation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "risk_score",
+              "displayName": "risk_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "risk_level",
+              "displayName": "risk_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "approved",
+              "displayName": "approved",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        0
+      ],
+      "id": "984c2ff4-2930-4fd2-9ead-e2a906500ee5",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "t2tB7dGI8KYysFkz",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const attack = ($json.attack_type || \"\").toLowerCase();\n\nlet owasp = \"Unknown\";\nlet risk_score = 30;\nlet risk_level = \"LOW\";\nlet decision = \"LOG\";\n\nif (attack.includes(\"sql\")) {\n  owasp = \"A03: Injection\";\n  risk_score = 90;\n  risk_level = \"HIGH\";\n  decision = \"ESCALATE\";\n} \nelse if (attack.includes(\"xss\")) {\n  owasp = \"A07: XSS\";\n  risk_score = 70;\n  risk_level = \"MEDIUM\";\n  decision = \"REVIEW\";\n}\nelse if (attack.includes(\"path\")) {\n  owasp = \"A01: Broken Access Control\";\n  risk_score = 80;\n  risk_level = \"HIGH\";\n  decision = \"ESCALATE\";\n}\n\nreturn [{\n  json: {\n    ...$json,\n    owasp_category: owasp,\n    risk_score,\n    risk_level,\n    decision,\n    ai_explanation: `Detected ${attack} attack`\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f29407be-47fc-4f48-b527-1c75fd25e1d8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "1362086351",
+        "text": "=SQL Injection detected\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "a9a9fda5-dc83-4583-9511-942e5c0572eb",
+      "name": "Send a text message",
+      "webhookId": "01021614-9061-4e6d-877a-4803b38acccc",
+      "credentials": {
+        "telegramApi": {
+          "id": "9jnfL4nkJekwUeCz",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "85b2f8f1-ab3c-4109-9ffe-cc08a195d1c2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a76d89f4fea2294422dc3036d374603c895699cf44a7b85c5d9693484ff22223"
+  },
+  "id": "fXdT4rP71qrWylbA",
+  "tags": []
+}
